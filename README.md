@@ -272,3 +272,33 @@ With the pinned dependencies and seed 42, local verification produced:
 These are regression errors, not a percentage classification accuracy.
 The Docker image build, healthy Compose deployment, container-to-container smoke
 check, and a prediction through the published host port have also been verified.
+
+## GitHub Continuous Integration
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) defines the **ML Model CI**
+pipeline. It runs automatically for pull requests targeting `main` and pushes
+to `main`, and can also be started from GitHub's **Actions** tab with **Run workflow**.
+
+| Check | What It Verifies |
+| --- | --- |
+| Python 3.12 tests | Installs pinned dependencies and runs the training/API workflow tests |
+| Python 3.13 tests | Runs the same tests on the other supported local Python version |
+| Docker model-serving check | Builds the image, waits for readiness, and runs the checker in another container |
+
+The Python 3.12 job also runs training and uploads the selected model, metadata,
+metrics, and comparison CSV as a temporary workflow artifact. The Docker job
+downloads those files into `artifacts/` before building. This is necessary because
+generated models are deliberately not committed to Git. The model is still trained
+outside the Docker build, preserving the certificate-safe deployment workflow.
+
+JUnit test reports and the serving artifact are downloadable from the workflow
+run for seven days. The container job prints status and logs, then cleans up
+containers even if a check fails. Each job has a 15-minute timeout.
+
+CI uses read-only repository permissions and does not require custom secrets.
+It does not publish an image or deploy to a cloud service. Initial package, base
+image, and housing-data downloads still require network access on the runner.
+
+For a pull request, open its **Checks** tab to inspect failures. The repository
+owner can separately configure branch protection to require these checks before
+merging; adding a workflow does not automatically enable branch protection.
