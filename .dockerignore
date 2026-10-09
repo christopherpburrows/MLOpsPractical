@@ -1,0 +1,15 @@
+.venv
+.git
+.pytest_cache
+**/__pycache__
+*.pyc
+artifacts/*
+!artifacts/model.joblib
+!artifacts/metadata.json
+!artifacts/metrics.json
+tests
+README.md
+TEACHING_GUIDE.md
+requirements-dev.txt
+.env
+presentation/

@@ -1,0 +1,39 @@
+services:
+  model-api:
+    build:
+      context: .
+      target: serving
+    image: housing-model-api:teaching
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    environment:
+      MODEL_PATH: /app/artifacts/model.joblib
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  smoke-check:
+    build:
+      context: .
+      target: serving
+    image: housing-model-api:teaching
+    profiles:
+      - checks
+    depends_on:
+      model-api:
+        condition: service_healthy
+    environment:
+      API_URL: http://model-api:8000
+    command: ["python", "smoke_test.py"]
+    restart: "no"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
